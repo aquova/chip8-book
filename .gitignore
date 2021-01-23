@@ -1,0 +1,14 @@
+# Rust files
+**/target/*
+**/pkg/*
+*.lock
+
+# Build products
+**/wasm.js
+*.wasm
+
+# Editor files
+*.code-workspace
+
+# Book files
+*.pdf

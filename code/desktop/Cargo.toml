@@ -1,0 +1,9 @@
+[package]
+name = "desktop"
+version = "0.1.0"
+authors = ["aquova <abrick912@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+chip8_core = { path = "../chip8_core" }
+sdl2 = "^0.34.3"

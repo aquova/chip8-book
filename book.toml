@@ -1,0 +1,6 @@
+[book]
+authors = ["aquova"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Chip-8 Emulation in Rust"

@@ -1,0 +1,8 @@
+[package]
+name = "chip8_core"
+version = "0.1.0"
+authors = ["aquova <abrick912@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+rand = { version = "^0.7.3", features = ["wasm-bindgen"] }

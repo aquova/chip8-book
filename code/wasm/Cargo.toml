@@ -1,0 +1,25 @@
+[package]
+name = "wasm"
+version = "0.1.0"
+authors = ["aquova <abrick912@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+chip8_core = { path = "../chip8_core" }
+js-sys = "^0.3.46"
+wasm-bindgen = "^0.2.69"
+
+[dependencies.web-sys]
+version = "^0.3.46"
+features = [
+    "CanvasRenderingContext2d",
+    "Document",
+    "Element",
+    "HtmlCanvasElement",
+    "ImageData",
+    "KeyboardEvent",
+    "Window"
+]
+
+[lib]
+crate-type = ["cdylib"]

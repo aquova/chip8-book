@@ -1,0 +1,19 @@
+---
+title:
+  - \vspace{6cm}
+  - An Introduction to Chip-8 Emulation using the Rust Programming Language
+author: by aquova
+date:
+  - 31 January 2021
+  - \newpage
+keywords: [emulation, chip-8, emudev, rust, webassembly]
+geometry: margin=0.75in
+numbersections: true
+toc: true
+toc-title: Table of Contents
+toccolor: black
+links-as-notes: false
+header-includes:
+  - \hypersetup{colorlinks=true,
+                allcolors=blue}
+---
