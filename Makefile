@@ -41,6 +41,9 @@ clean: clean_pdf clean_desktop clean_web
 clean_pdf:
 	rm -f src/chip8.pdf
 
+clean_epub:
+	rm -f src/chip8.epub
+
 clean_desktop:
 	cd code/desktop && \
 	cargo clean
