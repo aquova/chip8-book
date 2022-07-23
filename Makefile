@@ -12,6 +12,20 @@ pdf:
 		changes.md \
 		metadata.yaml
 
+epub:
+	cd src && \
+	pandoc -s -o chip8.epub \
+		intro.md \
+		basics.md \
+		setup.md \
+		methods.md \
+		instr.md \
+		frontend.md \
+		wasm.md \
+		opcodes.md \
+		changes.md \
+		metadata.yaml
+
 desktop:
 	cd code/desktop && \
 	cargo build --release
