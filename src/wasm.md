@@ -10,6 +10,8 @@ While we could cross-compile to the WebAssembly Rust targets ourselves, a useful
 $ cargo install wasm-pack
 ```
 
+If you are on Windows the install might fail at the openssl-sys crate https://github.com/rustwasm/wasm-pack/issues/1108 and you will have to download it manually from https://rustwasm.github.io/wasm-pack/
+
 I also mentioned that we will need to make a slight adjustment to our  `chip8_core` module to allow it to compile correctly to the `wasm` target. Rust uses a system called `wasm-bindgen` to create hooks that will work with WebAssembly. All of the `std` code we use is already fine, however we also use the `rand` crate in our backend, and it is not currently set to work correctly. Fortunately, it does support the functionality, we just need to enable it. In `chip8_core/Cargo.toml` we need to change
 
 ```toml
@@ -41,7 +43,7 @@ This command may look familiar, it will create another new Rust library called `
 chip8_core = { path = "../chip8_core" }
 ```
 
-Now, a big difference between our `desktop` and our new `wasm` is that `desktop` was an executable project, it had a `main.rs` that we would compile and run. `wasm` will not have that, it is meant to be compiled into a .wasm file that we will load into a webpage. It is the webpage that will serve that the frontend, so let's add some basic HTML boilerplate, just to get us started. Create a new folder called `web` to hold the webpage specific code, and then create `web/index.html` and add basic HTML boilerplate.
+Now, a big difference between our `desktop` and our new `wasm` is that `desktop` was an executable project, it had a `main.rs` that we would compile and run. `wasm` will not have that, it is meant to be compiled into a .wasm file that we will load into a webpage. It is the webpage that will serve as the frontend, so let's add some basic HTML boilerplate, just to get us started. Create a new folder called `web` to hold the webpage specific code, and then create `web/index.html` and add basic HTML boilerplate.
 
 ```html
 <!DOCTYPE html>
@@ -62,7 +64,7 @@ We'll add more to it later, but for now this will suffice. However, our web prog
 $ python3 -m http.server
 ```
 
-Then navigate to `localhost` in your web browser. If you ran this in the `web` directory, you should see the our `index.html` page displayed. Now, I've tried to find a simple, built-in way to start a local web server on Windows, and I haven't really found one. I personally use Python 3, but you are welcome to use any other similar service, such as `npm` or even some Visual Studio Code extensions. It doesn't matter which, just so they can host a local web page.
+Then navigate to `localhost` in your web browser. If you ran this in the `web` directory, you should see our `index.html` page displayed. Now, I've tried to find a simple, built-in way to start a local web server on Windows, and I haven't really found one. I personally use Python 3, but you are welcome to use any other similar service, such as `npm` or even some Visual Studio Code extensions. It doesn't matter which, just so they can host a local web page.
 
 ## Defining our WebAssembly API
 
@@ -164,7 +166,7 @@ Key pressing is the first of these functions that will deviate from what was don
 [dependencies.web-sys]
 version = "^0.3.46"
 features = [
-    KeyboardEvent
+    "KeyboardEvent"
 ]
 ```
 
@@ -256,6 +258,7 @@ Time to get our hands dirty in JavaScript. First, let's add some additional elem
         <h1>My Chip-8 Emulator</h1>
         <label for="fileinput">Upload a Chip-8 game: </label>
         <input type="file" id="fileinput" autocomplete="off"/>
+        <br/>
         <canvas id="canvas">If you see this message, then your browser doesn't support HTML5</canvas>
     </body>
     <script type="module" src="index.js"></script>
@@ -311,7 +314,7 @@ async function run() {
         chip8.keypress(evt, false)
     })
 
-    input.addEventListener("click", function(evt) {
+    input.addEventListener("change", function(evt) {
         // Handle file loading
     }, false)
 }
@@ -324,7 +327,7 @@ Here, we called the mandatory `init` function which tells our browser to initial
 We will now handle loading in a file when our button is pressed.
 
 ```js
-input.addEventListener("click", function(evt) {
+input.addEventListener("change", function(evt) {
     // Stop previous game from rendering, if one exists
     if (anim_frame != 0) {
         window.cancelAnimationFrame(anim_frame)
