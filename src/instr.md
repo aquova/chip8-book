@@ -498,7 +498,7 @@ match (digit1, digit2, digit3, digit4) {
 }
 ```
 
-Note that specifying `rnd` as a `u8` variable is necessary for the `random()` function to know which type it is supposed to generate.
+Note that specifying `rng` as a `u8` variable is necessary for the `random()` function to know which type it is supposed to generate.
 
 ### DXYN - Draw Sprite
 
@@ -526,7 +526,7 @@ match (digit1, digit2, digit3, digit4) {
             // Iterate over each column in our row
             for x_line in 0..8 {
                 // Use a mask to fetch current pixel's bit. Only flip if a 1
-                if (pixels & (0b10000000 >> x_line)) != 0 {
+                if (pixels & (0b1000_0000 >> x_line)) != 0 {
                     // Sprites should wrap around screen, so apply modulo
                     let x = (x_coord + x_line) as usize % SCREEN_WIDTH;
                     let y = (y_coord + y_line) as usize % SCREEN_HEIGHT;

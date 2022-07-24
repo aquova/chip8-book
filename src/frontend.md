@@ -91,7 +91,7 @@ sdl2 = "^0.34.3
 Now back in `desktop/src/main.rs`, we can begin bringing it all together. We'll need the public functions we defined in our core, so let's tell Rust we'll need those with `use chip8_core::*`.
 
 ```rust
-use chip8_core::*
+use chip8_core::*;
 use std::env;
 
 fn main() {
@@ -137,7 +137,7 @@ fn main() {
 
 This is a lot to take in, but the gist is this. We'll initialize SDL and tell it to create a new window of our scaled up size. We'll also have it be created in the middle of the user's screen. We'll then get the canvas object we'll actually draw to, with VSYNC on. Then go ahead and clear it and show it to the user.
 
-If you attempt to run it now (give it a dummy file name to test, like `cargo run test`), you'll see a window pop up for a brief moment before closing. This is because the SDL window is created briefly, but then the program ends and the window closes. We'll need to create our main game loop so that our program doesn't end immediately, and while we're add it, let's add some handling to quit the program if we try to exit out of the window (otherwise you'll have to force quit the program from your task manager).
+If you attempt to run it now (give it a dummy file name to test, like `cargo run test`), you'll see a window pop up for a brief moment before closing. This is because the SDL window is created briefly, but then the program ends and the window closes. We'll need to create our main game loop so that our program doesn't end immediately, and while we're at it, let's add some handling to quit the program if we try to exit out of the window (otherwise you'll have to force quit the program from your task manager).
 
 SDL uses something called an *event pump* to poll for events every loop. By checking this, we can cause different things to happen for given events, such as attempting to close the window or pressing a key. For now, we'll just have the program break out of the main game loop if it needs the window to close.
 
@@ -420,9 +420,11 @@ fn main() {
                 },
                 _ => ()
             }
-        }
 
-        chip8.tick();
+        for _ in 0..TICKS_PER_FRAME {
+            chip8.tick();
+        }
+        chip8.tick_timers();
         draw_screen(&chip8, &mut canvas);
     }
     // -- Unchanged code omitted --
@@ -456,7 +458,10 @@ fn main() {
             }
         }
 
-        chip8.tick();
+        for _ in 0..TICKS_PER_FRAME {
+            chip8.tick();
+        }
+        chip8.tick_timers();
         draw_screen(&chip8, &mut canvas);
     }
     // -- Unchanged code omitted --
