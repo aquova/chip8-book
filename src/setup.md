@@ -194,7 +194,7 @@ impl Emu {
     pub fn new() -> Self {
         Self {
             pc: 0x200,
-            ram: [0; NUM_REGS],
+            ram: [0; RAM_SIZE],
             screen: [false; SCREEN_WIDTH * SCREEN_HEIGHT],
             v_reg: [0; NUM_REGS],
             i_reg: 0,
