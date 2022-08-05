@@ -2,6 +2,7 @@
 **/target/*
 **/pkg/*
 *.lock
+*.epub
 
 # Build products
 **/wasm.js

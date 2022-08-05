@@ -10,7 +10,7 @@ This is a introductory tutorial for how to develop your first Chip-8 emulator us
 
 You can download the latest copy of the book here: https://github.com/aquova/chip8-book/releases
 
-To build a copy of the PDF yourself, first install [pandoc](https://pandoc.org/) then run `make pdf`. Details on how to setup the build environment for the source code are provided in the PDF, but once installed the completed emulator can be built with `make desktop` or `make web`
+To build a copy of the PDF yourself, first install [pandoc](https://pandoc.org/) then run `make pdf` (or `make epub` for an ePub version). Details on how to setup the build environment for the source code are provided in the PDF, but once installed the completed emulator can be built with `make desktop` or `make web`
 
 ## Credits
 

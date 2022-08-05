@@ -12,6 +12,20 @@ pdf:
 		changes.md \
 		metadata.yaml
 
+epub:
+	cd src && \
+	pandoc -s -o chip8.epub \
+		intro.md \
+		basics.md \
+		setup.md \
+		methods.md \
+		instr.md \
+		frontend.md \
+		wasm.md \
+		opcodes.md \
+		changes.md \
+		metadata.yaml
+
 desktop:
 	cd code/desktop && \
 	cargo build --release
@@ -26,6 +40,9 @@ clean: clean_pdf clean_desktop clean_web
 
 clean_pdf:
 	rm -f src/chip8.pdf
+
+clean_epub:
+	rm -f src/chip8.epub
 
 clean_desktop:
 	cd code/desktop && \
