@@ -14,6 +14,7 @@ toc-title: Table of Contents
 toccolor: black
 links-as-notes: false
 header-includes:
+  - \usepackage{hyperref}
   - \hypersetup{colorlinks=true,
                 allcolors=blue}
 ---
