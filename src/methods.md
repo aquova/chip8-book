@@ -4,7 +4,7 @@ We have now created our `Emu` struct and defined a number of variables for it to
 
 ## Push and Pop
 
-We have added both a `stack` array as well as a pointer `sp` to manage the CPU's stack, however it will be useful to implement both a `push` and `pop` method so we can access it easily.
+We have added both a `stack` array, as well as a pointer `sp` to manage the CPU's stack, however it will be useful to implement both a `push` and `pop` method so we can access it easily.
 
 ```rust
 impl Emu {
@@ -24,17 +24,19 @@ impl Emu {
 }
 ```
 
-These are pretty straightforward. `push` adds the given 16-bit value to the spot pointed to by the Stack Pointer, then moves the pointer to the next position. `pop` performs this operation in reverse, moving the SP back to the previous value then returning what is there. Note that attempting to pop an empty stack results in an underflow panic. You are welcome to add extra handling here if you like, but in the event this were to occur, that would indicate a bug with either our emulator or the game code, so I feel that a complete panic is acceptable.
+These are pretty straightforward. `push` adds the given 16-bit value to the spot pointed to by the Stack Pointer, then moves the pointer to the next position. `pop` performs this operation in reverse, moving the SP back to the previous value then returning what is there. Note that attempting to pop an empty stack results in an underflow panic[^1]. You are welcome to add extra handling here if you like, but in the event this were to occur, that would indicate a bug with either our emulator or the game code, so I feel that a complete panic is acceptable.
 
 ## Font Sprites
 
-We haven't yet delved into how the Chip-8 screen display works, but the gist for now is that it renders *sprites* which are stored in memory to the screen, one line at a time. It is up to the game developer to correctly load their sprites in before copying them over. However wouldn't it be nice if the system automatically had sprites for commonly used things, such as numbers? I mentioned earlier that our PC will begin at address 0x200, leaving the first 512 intentionally empty. Most modern emulators will use that space to store the sprite data for font characters of all the hexadecimal digits, that is characters of 0-9 and A-F. Strictly speaking, we could store this data at any fixed position in RAM, but this space is already defined as empty anyway. Each character is five bytes long, with each byte making up a row, thus the characters are 8x5 pixels each. To see how this works, make a note of the following diagram.
+We haven't yet delved into how the Chip-8 screen display works, but the gist for now is that it renders *sprites* which are stored in memory to the screen, one line at a time. It is up to the game developer to correctly load their sprites before copying them over. However wouldn't it be nice if the system automatically had sprites for commonly used things, such as numbers? I mentioned earlier that our PC will begin at address 0x200, leaving the first 512 intentionally empty. Most modern emulators will use that space to store the sprite data for font characters of all the hexadecimal digits, that is characters of 0-9 and A-F. We could store this data at any fixed position in RAM, but this space is already defined as empty anyway. Each character is made up of eight rows of five pixels, with each row using a byte of data, meaning that each letter altogether takes up five bytes of data. The following diagram illustrates how a character is stored as bytes.
+
+[^1] *Underflow* is when the value of an unsigned variable goes from above zero to below zero. In some languages the value would then "roll over" to the highest possible size, but in Rust this leads to a runtime error and needs to be handled differently if desired. The same goes for values exceeding the maximum possible value, known as *overflow*.
 
 \newpage
 
 ![Chip-8 Font Sprite](img/font_diagram.png)
 
-On the left, we have how the font sprite will appear on screen. On the right, there is each row encoded into binary. Each pixel is assigned a bit, which corresponds to whether that pixel will be white or black. *Every* sprite in Chip-8 is eight pixels wide, which means a pixel row requires 8-bits (1 byte). The above diagram shows the layout of the "1" character sprite. The fonts sprites don't need all 8 bits of width, so they all have black right halves. Sprites have been created for all of the hexadecimal digits, and are required to be present somewhere in RAM for some games to function. Later in this guide we will cover the instruction that handles these sprites, which will show how these are loaded and how the emulator knows where to find them. For now, we simply need to define them. We will do so with a constant array of bytes; at the top of `lib.rs`, add:
+On the right, each row is encoded into binary. Each pixel is assigned a bit, which corresponds to whether that pixel will be white or black. *Every* sprite in Chip-8 is eight pixels wide, which means a pixel row requires 8-bits (1 byte). The above diagram shows the layout of the "1" character sprite. The sprites don't need all 8 bits of width, so they all have black right halves. Sprites have been created for all of the hexadecimal digits, and are required to be present somewhere in RAM for some games to function. Later in this guide we will cover the instruction that handles these sprites, which will show how these are loaded and how the emulator knows where to find them. For now, we simply need to define them. We will do so with a constant array of bytes; at the top of `lib.rs`, add:
 
 ```rust
 const FONTSET_SIZE: usize = 80;
@@ -124,14 +126,14 @@ pub fn tick(&mut self) {
 }
 
 fn fetch(&mut self) -> u16 {
-
+    // TODO
 }
 
 ```
 
 The `fetch` function will only be called internally as part of our `tick` loop, so it doesn't need to be public. The purpose of this function is to grab the instruction we are about to execute (known as an *opcode*) for use in the next steps of this cycle. If you're unfamiliar with Chip-8's instruction format, I recommend you refresh up with the [overview](#eb) from the earlier chapters.
 
-Fortunately, Chip-8 is easier than many systems in two regards. For one, there's only 35 opcodes to deal with as opposed to the hundreds that many processors support. In addition, many systems store additional parameters for each opcode in subsequent bytes (such as operands for addition), Chip-8 encodes these into the opcode itself. Due to this, Chip-8 opcodes are larger than that of other systems, all of them are 2 bytes, but the entire instruction is stored in those two bytes, while other contemporary system might consume between 1 and 3 bytes per cycle.
+Fortunately, Chip-8 is easier than many systems. For one, there's only 35 opcodes to deal with as opposed to the hundreds that many processors support. In addition, many systems store additional parameters for each opcode in subsequent bytes (such as operands for addition), Chip-8 encodes these into the opcode itself. Due to this, all Chip-8 opcodes are exactly 2 bytes, which is larger than some other systems, but the entire instruction is stored in those two bytes, while other contemporary systems might consume between 1 and 3 bytes per cycle.
 
 Each opcode is encoded differently, but fortunately since all instructions consume two bytes, the fetch operation is the same for all of them, and implemented as such:
 
@@ -149,7 +151,7 @@ This function fetches the 16-bit opcode stored at our current Program Counter. W
 
 ## Timer Tick
 
-The Chip-8 specification also mentions two special purpose *timers*, the Delay Timer and the Sound Timer. While the `tick` function operates once every CPU cycle, these timers are modified instead once every frame, and thus need to be handled in a separate function. Their behavior is rather simple, every frame both decrease by one. If the Sound Timer is set to one, the system will emit a 'beep' noise. If they ever hit zero, they do not automatically reset, they will remain at zero until the game manually resets them to some value.
+The Chip-8 specification also mentions two special purpose *timers*, the Delay Timer and the Sound Timer. While the `tick` function operates once every CPU cycle, these timers are modified instead once every frame, and thus need to be handled in a separate function. Their behavior is rather simple, every frame both decrease by one. If the Sound Timer is set to one, the system will emit a 'beep' noise. If the timers ever hit zero, they do not automatically reset; they will remain at zero until the game manually resets them to some value.
 
 ```rust
 pub fn tick_timers(&mut self) {

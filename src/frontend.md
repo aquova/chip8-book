@@ -135,7 +135,7 @@ fn main() {
 }
 ```
 
-This is a lot to take in, but the gist is this. We'll initialize SDL and tell it to create a new window of our scaled up size. We'll also have it be created in the middle of the user's screen. We'll then get the canvas object we'll actually draw to, with VSYNC on. Then go ahead and clear it and show it to the user.
+We'll initialize SDL and tell it to create a new window of our scaled up size. We'll also have it be created in the middle of the user's screen. We'll then get the canvas object we'll actually draw to, with VSYNC on. Then go ahead and clear it and show it to the user.
 
 If you attempt to run it now (give it a dummy file name to test, like `cargo run test`), you'll see a window pop up for a brief moment before closing. This is because the SDL window is created briefly, but then the program ends and the window closes. We'll need to create our main game loop so that our program doesn't end immediately, and while we're at it, let's add some handling to quit the program if we try to exit out of the window (otherwise you'll have to force quit the program from your task manager).
 
@@ -225,11 +225,11 @@ fn main() {
 }
 ```
 
-A few things to note here. In the event that Rust is unable to open the file from the path the user gave us (likely because it doesn't exist), then the `expect` condition will fail and the program will exit with that message. Secondly, you may be asking why don't we simply give the file path to the backend and load the data in there? Opening and reading a file is in the standard library after all. This is for two reasons. Firstly, reading a file is a more frontend-type behavior and it better fits here. Secondly, and more importantly, our eventual plan is to make this emulator work in a web browser with little to no changes to our backend. How a browser reads a file is very different to how your file system will do it, so we will allow the frontends to handle the reading, and pass in the data once we have it.
+A few things to note here. In the event that Rust is unable to open the file from the path the user gave us (likely because it doesn't exist), then the `expect` condition will fail and the program will exit with that message. Secondly, we could give the file path to the backend and load the data there, but reading a file is a more frontend-type behavior and it better fits here. More importantly, our eventual plan is to make this emulator work in a web browser with little to no changes to our backend. How a browser reads a file is very different to how your file system will do it, so we will allow the frontends to handle the reading, and pass in the data once we have it.
 
 ## Running the Emulator and Drawing to the Screen
 
-Here's the big moment! The game has been loaded into RAM, our main loop is running, now we just need to tell our backend to begin processing its instructions, and to actually draw to the screen. If you recall, the emulator runs through a clock cycle each time its `tick` function is called, so let's add that to our loop.
+The game has been loaded into RAM and our main loop is running. Now we need to tell our backend to begin processing its instructions, and to actually draw to the screen. If you recall, the emulator runs through a clock cycle each time its `tick` function is called, so let's add that to our loop.
 
 ```rust
 fn main() {
@@ -254,7 +254,7 @@ use sdl2::render::Canvas;
 use sdl2::video::Window;
 ```
 
-Next, the function, which will take in a reference to our `Emu` object, as well as a mutable reference to our SDL canvas. Drawing the screen requires a few steps. First, we clear the canvas to erase the previous frame. Then, we iterate through the screen buffer, drawing a white rectangle anytime the given value is true. Since Chip-8 only supports black and white, if we clear the screen as black, we only have to worry about drawing the white squares.
+Next, the function, which will take in a reference to our `Emu` object, as well as a mutable reference to our SDL canvas. Drawing the screen requires a few steps. First, we clear the canvas to erase the previous frame. Then, we iterate through the screen buffer, drawing a white rectangle anytime the given value is true. Since Chip-8 only supports black and white; if we clear the screen as black, we only have to worry about drawing the white squares.
 
 ```rust
 fn draw_screen(emu: &Emu, canvas: &mut Canvas<Window>) {
@@ -307,11 +307,11 @@ If you have a Chip-8 game downloaded, go ahead and try running your emulator wit
 $ cargo run path/to/game
 ```
 
-If everything has gone well, you should see the window appear and the game begin to render and play! This is a tremendous step, and you should feel accomplished for getting this far with your very own emulator.
+If everything has gone well, you should see the window appear and the game begin to render and play! You should feel accomplished for getting this far with your very own emulator.
 
-As I mentioned previously, the emulation `tick` speed should probably run faster than the canvas refresh rate. If you watch your game run, it might feel a bit sluggish. Right now, we execute one instruction, then draw to the screen, then repeat. As you're aware now, it takes several instructions to be able to do any meaningful changes to the screen. To get around this, we will allow the emulator to tick several times before redrawing.
+As I mentioned previously, the emulation `tick` speed should probably run faster than the canvas refresh rate. If you watch your game run, it might feel a bit sluggish. Right now, we execute one instruction, then draw to the screen, then repeat. As you're aware, it takes several instructions to be able to do any meaningful changes to the screen. To get around this, we will allow the emulator to tick several times before redrawing.
 
-Now, this is where things get a bit... experimental. The Chip-8 specification says nothing about how quickly the system should actually run. Even leaving it is now so it runs at 60 Hz is a valid solution (and you're welcome to do so). We'll simply allow our `tick` function to loop several times before moving on to drawing the screen. Personally, I (and other emulators I've looked at) find that 10 times is a nice sweet spot.
+Now, this is where things get a bit experimental. The Chip-8 specification says nothing about how quickly the system should actually run. Even leaving it is now so it runs at 60 Hz is a valid solution (and you're welcome to do so). We'll simply allow our `tick` function to loop several times before moving on to drawing the screen. Personally, I (and other emulators I've looked at) find that 10 ticks per frame is a nice sweet spot.
 
 ```rust
 const TICKS_PER_FRAME: usize = 10;
@@ -333,7 +333,7 @@ fn main() {
 }
 ```
 
-Some of you might feel this is a bit hackish, and to be honest I somewhat agree with you. However, this is also how more 'sophisticated' systems work, with the exception that those CPUs usually have some way of notifying the screen that it's ready to redraw. Since the Chip-8 has no such mechanism nor any defined clock speed, this is a easier way to accomplish this task.
+Some of you might feel this is a bit hackish (I somewhat agree with you). However, this is also how more 'sophisticated' systems work, with the exception that those CPUs usually have some way of notifying the screen that it's ready to redraw. Since the Chip-8 has no such mechanism nor any defined clock speed, this is a easier way to accomplish this task.
 
 If you run again, you might notice that it doesn't get very far before pausing. This is likely due to the fact that we never update our two timers, so the emulator has no concept of how long time has passed for its games. I mentioned earlier that the timers run once per frame, rather than at the clock speed, so we can modify the timers at the same point as when we modify the screen.
 
@@ -363,7 +363,7 @@ We can finally render our Chip-8 game to the screen, but we can't get very far i
 
 As a refresher, the Chip-8 system supports 16 different keys. These are typically organized in a 4x4 grid, with keys 0-9 organized like a telephone with keys A-F surrounding. While you are welcome to organize the keys in any configuration you like, some game devs assumed they're in the grid pattern when choosing their games inputs, which means it can be awkward to play some games otherwise. For our emulator, we'll use the left-hand keys of the QWERTY keyboard as our inputs, as shown below.
 
-Let's create a helper function to convert SDL's key type into the values that we will send to the emulator. We'll need to bring SDL keyboard support into `main.rs` via:
+Let's create a function to convert SDL's key type into the values that we will send to the emulator. We'll need to bring SDL keyboard support into `main.rs` via:
 
 ```rust
 use sdl2::keyboard::Keycode;
@@ -397,7 +397,7 @@ fn key2btn(key: Keycode) -> Option<usize> {
 
 ![Keyboard to Chip-8 key layout](img/input_layout.png)
 
-Next, we'll add two additional events to our main event loop, one for `KeyDown` and the other for `KeyUp`. Each will check if the pressed key gives a `Some` value from our `key2btn` function, and if so pass it to the emulator via the public `keypress` function we defined earlier. The only difference between the two will be if it sets or clears.
+Next, we'll add two additional events to our main event loop, one for `KeyDown` and the other for `KeyUp`. Each event will check if the pressed key gives a `Some` value from our `key2btn` function, and if so pass it to the emulator via the public `keypress` function we defined earlier. The only difference between the two will be if it sets or clears.
 
 ```rust
 fn main() {
@@ -431,7 +431,7 @@ fn main() {
 }
 ```
 
-If you haven't seen it before, the `if let` statement is only satisfied if the value on the right matches that on the left, namely that `key2btn(key)` returns a `Some` value. The unwrapped value is then stored in `k`.
+The `if let` statement is only satisfied if the value on the right matches that on the left, namely that `key2btn(key)` returns a `Some` value. The unwrapped value is then stored in `k`.
 
 Let's also add a common emulator ability - quitting the program by pressing Escape. We'll add that alongside our `Quit` event.
 
@@ -468,9 +468,11 @@ fn main() {
 }
 ```
 
-Unlike the other key events, where we would check the found `key` variable, we are simply looking for the Escape key to quit. If you don't want this ability in your emulator, or would like some other key press functionality, you're welcome to do so.
+Unlike the other key events, where we would check the found `key` variable, we want to use the Escape key to quit. If you don't want this ability in your emulator, or would like some other key press functionality, you're welcome to do so.
 
-That's it! The desktop frontend of our Chip-8 emulator is now complete. We can specify a game via a command line parameter, load and execute it, display the output to the screen, and handle user input. I hope you were able to get an understanding of how emulation works. Chip-8 is a rather basic system, but the techniques discussed here form the basis for how all emulation works.
+That's it! The desktop frontend of our Chip-8 emulator is now complete. We can specify a game via a command line parameter, load and execute it, display the output to the screen, and handle user input.
+
+I hope you were able to get an understanding of how emulation works. Chip-8 is a rather basic system, but the techniques discussed here form the basis for how all emulation works.
 
 However, this guide isn't done! In the next section I will discuss how to build our emulator with WebAssembly and getting it to run in a web browser.
 

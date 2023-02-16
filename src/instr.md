@@ -11,7 +11,7 @@ pub fn tick(&mut self) {
 }
 ```
 
-This implies a bit that decode and execute will be their own separate functions. While they could be, personally for Chip-8 I think it's easier to simply perform the operation as we determine it, rather than involving another function call. Our `tick` function thus becomes this:
+This implies that decode and execute will be their own separate functions. While they could be, for Chip-8 it's easier to simply perform the operation as we determine it, rather than involving another function call. Our `tick` function thus becomes this:
 
 ```rust
 pub fn tick(&mut self) {
@@ -22,10 +22,11 @@ pub fn tick(&mut self) {
 }
 
 fn execute(&mut self, op: u16) {
+    // TODO
 }
 ```
 
-Our next step is to *decode*, which is to determine exactly which operation we're dealing with. The [Chip-8 opcode cheatsheet](#ot) has all of the available opcodes, how to interpret their parameters, and some notes on what they mean (if you don't like my table, there are many similar examples online). You will need to reference this often, in order for the emulator to be complete, each and every one of them must be implemented.
+Our next step is to *decode*, or determine exactly which operation we're dealing with. The [Chip-8 opcode cheatsheet](#ot) has all of the available opcodes, how to interpret their parameters, and some notes on what they mean. You will need to reference this often. For a complete emulator, each and every one of them must be implemented.
 
 ## Pattern Matching
 
@@ -57,13 +58,13 @@ fn execute(&mut self, op: u16) {
 
 Rust's `match` statement demands that all possible options be taken into account which is done with the `_` variable, which captures "everything else". Inside, we'll use the `unimplemented!` macro to cause the program to panic if it reaches that point. By the time we finish adding all opcodes, the Rust compiler demands that we still have an "everything else" statement, but we should never hit it.
 
-A brief side note for any developers who might be curious about other systems. While a long `match` statement would certainly work for other architectures, it is usually more common to implement instructions in their own functions, and either use a lookup table or programmatically determine which function is correct. Chip-8 is somewhat unusual as it stores instruction parameters into the opcode itself, meaning we need a lot of wild cards to match the instructions. Since there are a relatively small number of them, a `match` statement works well here.
+While a long `match` statement would certainly work for other architectures, it is usually more common to implement instructions in their own functions, and either use a lookup table or programmatically determine which function is correct. Chip-8 is somewhat unusual because it stores instruction parameters into the opcode itself, meaning we need a lot of wild cards to match the instructions. Since there are a relatively small number of them, a `match` statement works well here.
 
 With the framework setup, let's dive in!
 
 ## Intro to Implementing Opcodes
 
-The following pages individually discuss how all of Chip-8's instructions work, and include code of how to implement them. They are there to assist any programmers who are confused on how to proceed or how to interpret some of the more nuanced behavior of the system. You are welcome to simply follow along and implement instruction by instruction, but before you do that, you may want to look forward to the [next section](#dfe) and begin working on some of the frontend code. Currently we have no way of actually running our emulator, and it may be useful to some to be able to attempt to load and run a game for debugging. However, do remember that the emulator will likely crash rather quickly unless all of the instructions are implemented. Personally, I prefer to work on the instructions first before working on the other moving parts (hence why this guide is laid out the way it is).
+The following pages individually discuss how all of Chip-8's instructions work, and include code of how to implement them. You are welcome to simply follow along and implement instruction by instruction, but before you do that, you may want to look forward to the [next section](#dfe) and begin working on some of the frontend code. Currently we have no way of actually running our emulator, and it may be useful to some to be able to attempt to load and run a game for debugging. However, do remember that the emulator will likely crash rather quickly unless all of the instructions are implemented. Personally, I prefer to work on the instructions first before working on the other moving parts (hence why this guide is laid out the way it is).
 
 With that disclaimer out of the way, let's proceed to working on each of the Chip-8 instructions in turn.
 
@@ -98,7 +99,7 @@ match (digit1, digit2, digit3, digit4) {
 
 ### 00EE - Return from Subroutine
 
-We haven't yet spoken about subroutines (aka functions) and how they work. Entering into a subroutine works in the same way as just a plain jump; we move the PC to the specified address and resume execution from there. Unlike a jump, a subroutine is expected to complete at some point, and we will need to return back to the point where we entered. This is where our stack comes in. When we enter a subroutine, we simply push our address onto the stack, run the routine's code, and when we're ready to return we pop that value off our stack and execute from that point again. A stack also allows us to maintain return addresses for nested subroutines while ensuring they are returned in the correct order.
+We haven't yet spoken about subroutines (aka functions) and how they work. Entering into a subroutine works in the same way as a plain jump; we move the PC to the specified address and resume execution from there. Unlike a jump, a subroutine is expected to complete at some point, and we will need to return back to the point where we entered. This is where our stack comes in. When we enter a subroutine, we simply push our address onto the stack, run the routine's code, and when we're ready to return we pop that value off our stack and execute from that point again. A stack also allows us to maintain return addresses for nested subroutines while ensuring they are returned in the correct order.
 
 ```rust
 match (digit1, digit2, digit3, digit4) {
@@ -178,7 +179,7 @@ The implementation works like this: since we already have the second digit saved
 
 ### 4XNN - Skip next if VX != NN
 
-This opcode is exactly the same as the previous, with the change that we skip if the compared values are not equal.
+This opcode is exactly the same as the previous, except we skip if the compared values are not equal.
 
 ```rust
 match (digit1, digit2, digit3, digit4) {
@@ -199,7 +200,7 @@ match (digit1, digit2, digit3, digit4) {
 
 ### 5XY0 - Skip next if VX == VY
 
-A similar operation again, however we now use the third digit to index into another *V Register*. You will also notice that while the least significant digit is not used in the operation, this opcode requires it to be 0.
+A similar operation again, however we now use the third digit to index into another *V Register*. You will also notice that the least significant digit is not used in the operation. This opcode requires it to be 0.
 
 ```rust
 match (digit1, digit2, digit3, digit4) {
@@ -220,7 +221,7 @@ match (digit1, digit2, digit3, digit4) {
 
 ### 6XNN - VX = NN
 
-This operation does not require too much explanation, set the *V Register* specified by the second digit to the value given.
+Set the *V Register* specified by the second digit to the value given.
 
 ```rust
 match (digit1, digit2, digit3, digit4) {
@@ -761,7 +762,7 @@ match (digit1, digit2, digit3, digit4) {
 }
 ```
 
-A side note on efficiency here. For this implementation, I converted our VX value first into a `float`, so that I could use division and modulo arithmetic to get each decimal digit. This is not the fastest implementation nor is it probably the shortest. However, it is one of the easiest to understand. I'm sure there are some highly binary-savvy readers who are disgusted that I did it this way, but this solution is not for them. This is for readers who have never seen BCD before where losing some speed for greater understanding is a better trade-off. However, once you have this implemented, I would encourage everyone to go out and look up more efficient BCD algorithms to add a bit of easily optimization into your code.
+For this implementation, I converted our VX value first into a `float`, so that I could use division and modulo arithmetic to get each decimal digit. This is not the fastest implementation nor is it probably the shortest. However, it is one of the easiest to understand. I'm sure there are some highly binary-savvy readers who are disgusted that I did it this way, but this solution is not for them. This is for readers who have never seen BCD before, where losing some speed for greater understanding is a better trade-off. However, once you have this implemented, I would encourage everyone to go out and look up more efficient BCD algorithms to add a bit of easy optimization into your code.
 
 ### FX55 - Store V0 - VX into I
 
@@ -805,6 +806,6 @@ match (digit1, digit2, digit3, digit4) {
 
 ### Final Thoughts
 
-That's it! With this, we now have a fully implemented Chip-8 CPU. You may have noticed through this journey that there are a lot of possible opcode values that are never covered, particularly in the 0x0000, 0xE000, and 0xF000 ranges. This is okay. These opcodes are left as undefined by the original design, and thus if any game attempts to use them it will lead to a `panic!`. If you are still curious following the completion of this emulator, there are a number of Chip-8 extensions which do fill in some of these gaps to add additional functionality, but they will not be covered by this guide.
+That's it! With this, we now have a fully implemented Chip-8 CPU. You may have noticed a lot of possible opcode values are never covered, particularly in the 0x0000, 0xE000, and 0xF000 ranges. This is okay. These opcodes are left as undefined by the original design, and thus if any game attempts to use them it will lead to a runtime panic. If you are still curious following the completion of this emulator, there are a number of Chip-8 extensions which do fill in some of these gaps to add additional functionality, but they will not be covered by this guide.
 
 \newpage

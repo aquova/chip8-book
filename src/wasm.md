@@ -1,6 +1,6 @@
 # Introduction to WebAssembly
 
-This section will discuss how to take our finished emulator and configure it to run in a web browser via a relatively new technology called *WebAssembly*. I encourage you to [read more](https://en.wikipedia.org/wiki/WebAssembly) about WebAssembly, as it is an interesting and rapidly growing technology. A brief gist is that it is a format for compiling programs into a binary executable, similar in scope to an .exe, but are meant to be run within a web browser. It is supported by all of the major web browsers, and is a cross-company standard being developed between them. This means that instead of having to write web code in JavaScript or other web-centric languages, you can write it in any language that supports compilation of .wasm files and still be able to run in a browser. At the time of writing, C, C++, and Rust are the major languages which support it, fortunately for us.
+This section will discuss how to take our finished emulator and configure it to run in a web browser via a relatively new technology called *WebAssembly*. I encourage you to [read more](https://en.wikipedia.org/wiki/WebAssembly) about WebAssembly. It is a format for compiling programs into a binary executable, similar in scope to an .exe, but are meant to be run within a web browser. It is supported by all of the major web browsers, and is a cross-company standard being developed between them. This means that instead of having to write web code in JavaScript or other web-centric languages, you can write it in any language that supports compilation of .wasm files and still be able to run in a browser. At the time of writing, C, C++, and Rust are the major languages which support it, fortunately for us.
 
 ## Setting Up
 
@@ -58,19 +58,19 @@ Now, a big difference between our `desktop` and our new `wasm` is that `desktop`
 </html>
 ```
 
-We'll add more to it later, but for now this will suffice. However, our web program will not run if you simply open the file in a web browser, you will need to start a web server first. If you have Python 3 installed, which all modern Macs and many Linux distributions do, you can simply start a web server via:
+We'll add more to it later, but for now this will suffice. Our web program will not run if you simply open the file in a web browser, you will need to start a web server first. If you have Python 3 installed, which all modern Macs and many Linux distributions do, you can simply start a web server via:
 
 ```
 $ python3 -m http.server
 ```
 
-Then navigate to `localhost` in your web browser. If you ran this in the `web` directory, you should see our `index.html` page displayed. Now, I've tried to find a simple, built-in way to start a local web server on Windows, and I haven't really found one. I personally use Python 3, but you are welcome to use any other similar service, such as `npm` or even some Visual Studio Code extensions. It doesn't matter which, just so they can host a local web page.
+Navigate to `localhost` in your web browser. If you ran this in the `web` directory, you should see our `index.html` page displayed. I've tried to find a simple, built-in way to start a local web server on Windows, and I haven't really found one. I personally use Python 3, but you are welcome to use any other similar service, such as `npm` or even some Visual Studio Code extensions. It doesn't matter which, just so they can host a local web page.
 
 ## Defining our WebAssembly API
 
-Here are the broad steps we are going to take to create our browser emulator. We have our  `chip8_core` created already, but we are now missing all of the functionality we added to `desktop`. Loading a file, handling key presses, telling it when to tick, etc. On the other hand, we have a web page that (will) run JavaScript, which needs to handle inputs from the user and display items. Our `wasm` crate is what goes in the middle. It will take inputs from JavaScript and convert them into the data types required by our  `chip8_core`.
+We have our  `chip8_core` created already, but we are now missing all of the functionality we added to `desktop`. Loading a file, handling key presses, telling it when to tick, etc. On the other hand, we have a web page that (will) run JavaScript, which needs to handle inputs from the user and display items. Our `wasm` crate is what goes in the middle. It will take inputs from JavaScript and convert them into the data types required by our  `chip8_core`.
 
-Most importantly, we also need to somehow create a `chip8_core::Emu` object and keep it in scope for the entirety of our web page. This is also where that happens.
+Most importantly, we also need to somehow create a `chip8_core::Emu` object and keep it in scope for the entirety of our web page.
 
 To begin, let's include a few external crates that we will need to allow Rust to interface with JavaScript. Open up `wasm/Cargo.toml` and add the following dependencies:
 
@@ -299,7 +299,7 @@ const input = document.getElementById("fileinput")
 
 All of this will look familiar from our `desktop` build. We fetch the HTML canvas and adjust its size to the dimension of our Chip-8 screen, plus scaled up a bit (feel free to adjust this for your preferences).
 
-Now to the meat of it! Let's create a main `run` function that will load our `EmuWasm` object and handle the main emulation.
+Let's create a main `run` function that will load our `EmuWasm` object and handle the main emulation.
 
 ```js
 async function run() {
@@ -357,7 +357,7 @@ function mainloop(chip8) {
 
 This function adds an event listener to our `input` button which is triggered whenever it is clicked. Our `desktop` frontend used SDL to manage not only drawing to a window, but only to ensure that we were running at 60 FPS. The analogous feature for canvases is the "Animation Frames". Anytime we want to render something to the canvas, we request the window to animate a frame, and it will wait until the correct time has elapsed to ensure 60 FPS performance. We'll see how this works in a moment, but for now, we need to tell our program that if we're loading a new game, we need to stop the previous animation. We'll also reset our emulator before we load in the ROM, to ensure everything is just as it started, without having to reload the webpage.
 
-Following that, we look at the file that the user has pointed us to. We don't do any fancy checking to see if it's actually a Chip-8 program, but we do need to make sure that it is a file of some sort. We then read it in and pass it to our backend via our `EmuWasm` object. Once the game is loaded, we can jump into our main emulation loop!
+Following that, we look at the file that the user has pointed us to. We don't need to check if it's actually a Chip-8 program, but we do need to make sure that it is a file of some sort. We then read it in and pass it to our backend via our `EmuWasm` object. Once the game is loaded, we can jump into our main emulation loop!
 
 ```js
 function mainloop(chip8) {
@@ -380,7 +380,7 @@ function mainloop(chip8) {
 }
 ```
 
-This should look very similar to what we did for our `desktop` frontend, minus the SDL specific stuff, so I'll only briefly mention it. We tick several times before clearing the canvas and telling our `EmuWasm` object to draw the current frame to our canvas. Here is where we tell our window that we would like to render a frame, and we also save its ID for if we need to cancel it above. The `requestAnimationFrame` will wait to ensure 60 FPS performance, and then restart our `mainloop` when it is time, beginning the process all over again.
+This should look very similar to what we did for our `desktop` frontend. We tick several times before clearing the canvas and telling our `EmuWasm` object to draw the current frame to our canvas. Here is where we tell our window that we would like to render a frame, and we also save its ID for if we need to cancel it above. The `requestAnimationFrame` will wait to ensure 60 FPS performance, and then restart our `mainloop` when it is time, beginning the process all over again.
 
 ## Compiling our WebAssembly binary
 
@@ -396,7 +396,7 @@ Running the page in a local web server should allow you to pick and load a game 
 
 ## Drawing to the canvas
 
-Here is the final step, rendering to the screen. We created an empty `draw_screen` function in our `EmuWasm` object, and we call it at the right time, but it currently doesn't do anything. Now, there are two ways we could handle this. We could either pass the frame buffer into JavaScript and render it, or we could obtain our canvas in our `EmuWasm` binary and render to it in Rust. Either method would work fine, but personally I found that handling the rendering in Rust is actually easier personally.
+Here is the final step, rendering to the screen. We created an empty `draw_screen` function in our `EmuWasm` object, and we call it at the right time, but it currently doesn't do anything. Now, there are two ways we could handle this. We could either pass the frame buffer into JavaScript and render it, or we could obtain our canvas in our `EmuWasm` binary and render to it in Rust. Either method would work fine, but personally I found that handling the rendering in Rust is easier.
 
 We've used the `web_sys` crate to handle JavaScript `KeyboardEvents` in Rust, but it has the functionality to manage many more JavaScript elements. Again, the ones we wish to use will need to be defined as features in `wasm/Cargo.toml`.
 

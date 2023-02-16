@@ -4,7 +4,7 @@ title:
   - An Introduction to Chip-8 Emulation using the Rust Programming Language
 author: by aquova
 date:
-  - 31 January 2021
+  - 15 February 2023
   - \newpage
 keywords: [emulation, chip-8, emudev, rust, webassembly]
 geometry: margin=0.75in
