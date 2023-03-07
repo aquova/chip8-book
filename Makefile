@@ -1,29 +1,29 @@
 pdf:
 	cd src && \
 	pandoc -s -o chip8.pdf \
-		intro.md \
-		basics.md \
-		setup.md \
-		methods.md \
-		instr.md \
-		frontend.md \
-		wasm.md \
-		opcodes.md \
-		changes.md \
+		1-intro.md \
+		2-basics.md \
+		3-setup.md \
+		4-methods.md \
+		5-instr.md \
+		6-frontend.md \
+		7-wasm.md \
+		8-opcodes.md \
+		9-changes.md \
 		metadata.yaml
 
 epub:
 	cd src && \
 	pandoc -s -o chip8.epub \
-		intro.md \
-		basics.md \
-		setup.md \
-		methods.md \
-		instr.md \
-		frontend.md \
-		wasm.md \
-		opcodes.md \
-		changes.md \
+		1-intro.md \
+		2-basics.md \
+		3-setup.md \
+		4-methods.md \
+		5-instr.md \
+		6-frontend.md \
+		7-wasm.md \
+		8-opcodes.md \
+		9-changes.md \
 		metadata.yaml
 
 desktop:
