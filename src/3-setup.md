@@ -158,6 +158,37 @@ pub struct Emu {
 
 ```
 
+## The keys
+
+Chip-8 supports a surprisingly large 16 different keys, typically numbered in hexadecimal from 0 through 9, A through F. The keys are arranged similarly to a telephone layout, with A and B placed to either side of 0, and C thru F placed on the right column, making a 4x4 grid.
+
+![Keyboard to Chip-8 key layout](img/input_layout.png)
+
+We need to keep track of which of the keys are pressed, thus we can use an array of booleans to track the states.
+
+```rust
+pub const SCREEN_WIDTH: usize = 64;
+pub const SCREEN_HEIGHT: usize = 32;
+
+const RAM_SIZE: usize = 4096;
+const NUM_REGS: usize = 16;
+const STACK_SIZE: usize = 16;
+const NUM_KEYS: usize = 16;
+
+pub struct Emu {
+    pc: u16,
+    ram: [u8; RAM_SIZE],
+    screen: [bool; SCREEN_WIDTH * SCREEN_HEIGHT],
+    v_reg: [u8; NUM_REGS],
+    i_reg: u16,
+    sp: u16,
+    stack: [u16; STACK_SIZE],
+    keys: [bool; NUM_KEYS],
+}
+
+```
+
+
 ## The timers
 
 This has been a lot to process at once, but we're now at the final items. Chip-8 also has two other special registers that it uses as *timers*. The first, the *Delay Timer* is used by the system as a typical timer, counting down every cycle and performing some action if it hits 0. The *Sound Timer* on the other hand, also counts down every clock cycle, but upon hitting 0 emits a noise. Setting the *Sound Timer* to 0 is the only way to emit audio on the Chip-8, as we will see later. These are both 8-bit registers, and must be supported for us to continue.
